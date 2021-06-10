@@ -22,7 +22,7 @@ enum IMAGE
 class BitMapManager
 {
 private:
-	std::vector<BitMap> m_parrBitMap;
+	std::vector<BitMap*> m_parrBitMap;
 	static BitMapManager* m_hThis;
 public:
 	static BitMapManager* GetInstance()
@@ -33,7 +33,7 @@ public:
 	}
 	BitMap* GetImage(IMAGE index)
 	{
-		return &m_parrBitMap[index];
+		return m_parrBitMap[index];
 	}
 	BitMapManager();
 	void Init(HWND hWnd);

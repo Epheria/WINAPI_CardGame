@@ -17,6 +17,10 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 
+
+
+
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
     _In_ LPWSTR    lpCmdLine,
@@ -41,20 +45,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ULONGLONG frameTime, limitFrameTime = GetTickCount64();
     ULONGLONG time = 0;
 
-    Card tmp;
-    std::vector<Card> CardList;
-
-    int ix = 10, iy = 10;
-
-    for (int i = IMAGE_START; i < IMAGE_END; i++)
-    {
-        tmp.Init((IMAGE)i, ix, iy);
-        ix += 200;
-        //iy += 200;
-        CardList.push_back(tmp);
-    }
-
     HDC hdc = GetDC(g_hWnd);
+
 
     MSG msg;
     ZeroMemory(&msg, sizeof(msg));
@@ -73,12 +65,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             {
                 float elapsed = (frameTime - limitFrameTime) * 0.01f; //유저의 시스템 환경에 따라 발생하는 시간차이.
                 limitFrameTime = frameTime + 30;//30 => 0.03초.
-
- /*               
-                for (int i = 0; i < CardList.size(); i++)
-                {
-                    CardList[i].Draw(hdc);
-                }*/
             }
         }
     }
@@ -144,9 +130,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         return FALSE;
     }
 
-    BitMapManager::GetInstance()->Init(g_hWnd);
-
-
     //-----------------------------------------------------------
     // 윈도우 작업영역을 화면의 중앙에 맞추기 위해 코드 추가.
     //RECT rcWinBounds;
@@ -183,28 +166,57 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - 종료 메시지를 게시하고 반환합니다.
 //
 //
+
+Card card;
+std::vector<Card> CardList;
+Card card2;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    Card card;
     POINT Point;
+    int ix = 100, iy = 100;
     switch (message)
     {
     ////그리기는 게임루프에서 처리.
+    case WM_CREATE:
+        BitMapManager::GetInstance()->Init(hWnd);
+        for (int i = IMAGE_DOG; i < IMAGE_CHICKEN; i++)
+        {
+            card.Init((IMAGE)i, ix, iy);
+            ix += 200;
+            // iy += 200;
+            CardList.push_back(card);
+        }
+        //card.Init(IMAGE_CHICKEN, 100, 100);
+        //card2.Init(IMAGE_DOG, 300, 100);
+        break;
+
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(g_hWnd, &ps);
+            HDC hdc = BeginPaint(hWnd, &ps);
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
-            card.Draw(hdc);
-
-            EndPaint(g_hWnd, &ps);
+            for (auto& c : CardList)
+            {
+                c.Draw(hdc);
+            }
+            //card.Draw(hdc);
+            //card2.Draw(hdc);
+            EndPaint(hWnd, &ps);
         }
         break;
     case WM_LBUTTONDOWN:
         Point.x = LOWORD(lParam);
         Point.y = HIWORD(lParam);
-        if (card.ColliderCheck(Point))
-            InvalidateRect(hWnd, NULL, true);
+        for (auto& c : CardList)
+        {
+            if (c.ColliderCheck(Point))
+            {
+                InvalidateRect(hWnd, NULL, true);
+                break;
+            }
+        }
+        //if (card.ColliderCheck(Point))
+        //    InvalidateRect(hWnd, NULL, true);
         break;
     case WM_KEYDOWN:
     {
@@ -216,6 +228,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     break;
     case WM_DESTROY:
+        delete BitMapManager::GetInstance();
         PostQuitMessage(0);
         break;
     default:

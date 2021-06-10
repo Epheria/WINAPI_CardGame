@@ -12,12 +12,13 @@ BitMapManager::BitMapManager()
 void BitMapManager::Init(HWND hWnd)
 {
 	char buf[256];
-	BitMap tmp;
+	BitMap* tmp;
 	HDC hdc = GetDC(hWnd);
 	for (int i = IMAGE_START; i < IMAGE_END; i++)
 	{
 		sprintf(buf, "Resource//0%d.bmp", i);
-		tmp.Init(hdc,buf);
+		tmp = new BitMap;
+		tmp->Init(hdc,buf);
 		m_parrBitMap.push_back(tmp);
 	}
 	ReleaseDC(hWnd, hdc);
@@ -25,5 +26,9 @@ void BitMapManager::Init(HWND hWnd)
 
 BitMapManager::~BitMapManager()
 {
+	for (auto& b : m_parrBitMap)
+	{
+		delete b;
+	}
 	//delete[] m_parrBitMap;
 }
