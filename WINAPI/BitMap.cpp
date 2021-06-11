@@ -20,7 +20,10 @@ void BitMap::Draw(HDC hdc, int x, int y)
 {
 	StretchBlt(hdc, x, y, m_Size.cx, m_Size.cy, MemDC, 0, 0, m_Size.cx * 2, m_Size.cy * 2, SRCCOPY);
 }
-
+void BitMap::DrawBackGround(HDC hdc, int x, int y)
+{
+	StretchBlt(hdc, x, y, m_Size.cx * 10, m_Size.cy * 10, MemDC, 0, 0, m_Size.cx * 8.5f, m_Size.cy * 8.5f, SRCCOPY);
+}
 BitMap::~BitMap()
 {
 	SelectObject(MemDC, m_OldBitMap);

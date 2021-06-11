@@ -14,7 +14,7 @@ void BitMapManager::Init(HWND hWnd)
 	char buf[256];
 	BitMap* tmp;
 	HDC hdc = GetDC(hWnd);
-	for (int i = IMAGE_START; i < IMAGE_END; i++)
+	for (int i = IMAGE_START; i <= IMAGE_END; i++)
 	{
 		sprintf(buf, "Resource//0%d.bmp", i);
 		tmp = new BitMap;

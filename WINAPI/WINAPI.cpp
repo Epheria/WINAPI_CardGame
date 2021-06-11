@@ -3,7 +3,7 @@
 
 #include "framework.h"
 #include "WinAPI.h"
-#include "Card.h"
+#include "GameManager.h"
 
 #define MAX_LOADSTRING 100
 
@@ -42,10 +42,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     }
 
 
-    ULONGLONG frameTime, limitFrameTime = GetTickCount64();
-    ULONGLONG time = 0;
+    //ULONGLONG frameTime, limitFrameTime = GetTickCount64();
+    //ULONGLONG time = 0;
 
-    HDC hdc = GetDC(g_hWnd);
+    //HDC hdc = GetDC(g_hWnd);
 
 
     MSG msg;
@@ -53,22 +53,23 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // 기본 메시지 루프입니다:
     while (WM_QUIT != msg.message)
     {
+
         if (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-        else
-        {
-            frameTime = GetTickCount64();       //윈도우가 시작된 후 지금까지 시간. 1/1000초.
-            if (limitFrameTime <= frameTime)  //0.03초마다 업데이트.
-            {
-                float elapsed = (frameTime - limitFrameTime) * 0.01f; //유저의 시스템 환경에 따라 발생하는 시간차이.
-                limitFrameTime = frameTime + 30;//30 => 0.03초.
-            }
-        }
+        //else
+        //{
+        //    frameTime = GetTickCount64();       //윈도우가 시작된 후 지금까지 시간. 1/1000초.
+        //    if (limitFrameTime <= frameTime)  //0.03초마다 업데이트.
+        //    {
+        //        float elapsed = (frameTime - limitFrameTime) * 0.01f; //유저의 시스템 환경에 따라 발생하는 시간차이.
+        //        limitFrameTime = frameTime + 30;//30 => 0.03초.
+        //    }
+        //}
     }
-    ReleaseDC(g_hWnd, hdc);
+    //ReleaseDC(g_hWnd, hdc);
 
     return (int)msg.wParam;
 }
@@ -167,56 +168,26 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 //
 
-Card card;
-std::vector<Card> CardList;
-Card card2;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    POINT Point;
-    int ix = 100, iy = 100;
     switch (message)
     {
     ////그리기는 게임루프에서 처리.
     case WM_CREATE:
-        BitMapManager::GetInstance()->Init(hWnd);
-        for (int i = IMAGE_DOG; i < IMAGE_CHICKEN; i++)
-        {
-            card.Init((IMAGE)i, ix, iy);
-            ix += 200;
-            // iy += 200;
-            CardList.push_back(card);
-        }
-        //card.Init(IMAGE_CHICKEN, 100, 100);
-        //card2.Init(IMAGE_DOG, 300, 100);
+        GameManager::GetInstance()->CreateCard(hWnd);
         break;
 
     case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
-            for (auto& c : CardList)
-            {
-                c.Draw(hdc);
-            }
-            //card.Draw(hdc);
-            //card2.Draw(hdc);
-            EndPaint(hWnd, &ps);
-        }
+    {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hWnd, &ps);
+        GameManager::GetInstance()->Draw(hWnd, lParam, hdc, ps);
+        EndPaint(hWnd, &ps);
         break;
+    }
     case WM_LBUTTONDOWN:
-        Point.x = LOWORD(lParam);
-        Point.y = HIWORD(lParam);
-        for (auto& c : CardList)
-        {
-            if (c.ColliderCheck(Point))
-            {
-                InvalidateRect(hWnd, NULL, true);
-                break;
-            }
-        }
-        //if (card.ColliderCheck(Point))
-        //    InvalidateRect(hWnd, NULL, true);
+        GameManager::GetInstance()->Update(hWnd, lParam);
+        
         break;
     case WM_KEYDOWN:
     {
