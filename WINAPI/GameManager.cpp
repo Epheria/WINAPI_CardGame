@@ -3,6 +3,7 @@ GameManager* GameManager::m_hThis = NULL;
 
 GameManager::GameManager()
 {
+    m_iWinCount = 0;
     m_iMenuSelect = -1;
 }
 
@@ -23,32 +24,41 @@ void GameManager::DrawCard(HWND hWnd, HDC hdc)
 }
 
 void GameManager::CreateCard(HWND hWnd)
-{
-    srand(time(NULL));
-    
-    int ix = 40, iy = 100;
-    int iCur = 0;
-
+{    
     int i = 0;
+    RandCard();
     BitMapManager::GetInstance()->Init(hWnd);
     for (int y = 0; y < 4; y++)
     {
         for (int x = 0; x < 5; x++)
         {
-            m_Card.Init((IMAGE)i, x * (73 + 10) + 80, y * (118 + 10) + 140);
+            m_Card.Init(GetImage(i), x * (73 + 10) + 80, y * (118 + 10) + 140);
             CardList.push_back(m_Card);
-            
+            i++;
         }
-        //m_Card.Init((IMAGE)i, ix, iy);
-        //ix += 100;
-        //if (iCur % 5 >= 5 || iCur % 10 >= 5)
-        //    iy += 100;
-        //CardList.push_back(m_Card);
-        //iCur++;
-        i++;
-    }
+     }
 
     m_BackGround.InitBackGround(IMAGE_END, 0, 0);
+}
+
+void GameManager::RandCard()
+{
+    srand(time(NULL));
+    std::vector<IMAGE> CompareList;
+
+    for (int i = 0; i < MAX_CARD; i++)
+    {
+        CompareList.push_back((IMAGE)i);
+        CompareList.push_back((IMAGE)i);
+    }
+
+    while (!CompareList.empty())
+    {
+        int index = rand() % (int)(CompareList.size());
+        auto iter = CompareList.begin() + index;
+        ImageList.push_back(CompareList[index]);
+        CompareList.erase(iter);
+    }
 }
 
 void GameManager::Update(HWND hWnd, LPARAM lParam)
@@ -64,7 +74,13 @@ void GameManager::Update(HWND hWnd, LPARAM lParam)
         {
             if (c.ColliderCheck(Point))
             {
-
+                // Card를 보내지말고 index 를 보내서 인덱스값으로 비교하면될듯
+                // for(int i = 0; ....) 이런식
+                if (IsSameCard(c))
+                {
+                    m_iWinCount++;
+                }
+               
                 InvalidateRect(hWnd, NULL, true);
                 break;
             }

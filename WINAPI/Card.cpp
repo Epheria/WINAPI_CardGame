@@ -43,9 +43,7 @@ bool Card::ColliderCheck(POINT point)
 {
 	if (PtInRect(&m_BitMapRect, point))
 	{
-		if (m_eCardState == CARD_FRONT)
-			m_eCardState = CARD_REAR;
-		else
+		if (m_eCardState == CARD_REAR)
 			m_eCardState = CARD_FRONT;
 		return true;
 	}
