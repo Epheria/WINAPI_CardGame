@@ -16,6 +16,8 @@ private:
 	std::vector<Card> CardList;
 	std::vector<Card> CardBuffer;
 	std::vector<IMAGE> ImageList;
+	int m_index, m_index2;
+	int iCurtime;
 	static GameManager* m_hThis;
 	RECT rect = { 100, 100, 400, 300 };
 	int m_iMenuSelect;
@@ -32,27 +34,22 @@ public:
 	{
 		return ImageList[index];
 	}
-	bool IsSameCard(Card& c)
+	bool IsSameCard(int index)
 	{
-		CardBuffer.push_back(c);
-		if (CardBuffer.size() == 2)
+		if (-1 != m_index)
 		{
-			if (CardBuffer[0].GetCardImage() == CardBuffer[1].GetCardImage())
-			{
-				return true;
-			}
-			else
-			{
-				return false;
-			}
+			return (CardList[index].GetCardImage() == CardList[m_index].GetCardImage());
 		}
+
 		return false;
 	}
+	void DrawCardRear(HWND hWnd);
 	void DrawMenu(HWND hWnd, HDC hdc, PAINTSTRUCT ps);
 	void DrawCard(HWND hWnd, HDC hdc);
 	void CreateCard(HWND hWnd);
 	void Update(HWND hWnd, LPARAM lParam);
 	void Draw(HWND hWnd, LPARAM lParam, HDC hdc, PAINTSTRUCT ps);
 	void RandCard();
+
 };
 

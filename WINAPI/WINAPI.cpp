@@ -1,6 +1,6 @@
 ﻿// WinAPI.cpp : 애플리케이션에 대한 진입점을 정의합니다.
 //
-
+#include <string>
 #include "framework.h"
 #include "WinAPI.h"
 #include "GameManager.h"
@@ -11,6 +11,8 @@
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 HWND g_hWnd;
+char g_buf[256];
+int itime = 60;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -167,21 +169,43 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - 종료 메시지를 게시하고 반환합니다.
 //
 //
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
+{ 
     switch (message)
     {
     ////그리기는 게임루프에서 처리.
     case WM_CREATE:
+        SetTimer(hWnd, 1, 1000, NULL);
+        SetTimer(hWnd, 2, 100, NULL);
         GameManager::GetInstance()->CreateCard(hWnd);
+        MoveWindow(hWnd, 0, 0, 578, 800, true);
         break;
 
+    case WM_TIMER:
+        switch (wParam)
+        {
+        case 1:
+        {
+            if (itime == 0)
+                break;
+            sprintf_s(g_buf, "%d 초", itime);
+            itime--;
+            InvalidateRect(hWnd, NULL, true);
+            break;
+        }
+        case 2:
+            GameManager::GetInstance()->DrawCardRear(hWnd);
+            break;
+        }
+        break;
     case WM_PAINT:
     {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
+
+        
         GameManager::GetInstance()->Draw(hWnd, lParam, hdc, ps);
+        TextOutA(hdc, 578 * 0.5f, 50, g_buf, 5);
         EndPaint(hWnd, &ps);
         break;
     }
@@ -199,6 +223,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     break;
     case WM_DESTROY:
+        KillTimer(hWnd, 1);
+        KillTimer(hWnd, 2);
         delete BitMapManager::GetInstance();
         PostQuitMessage(0);
         break;

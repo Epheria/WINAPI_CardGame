@@ -22,9 +22,10 @@ public:
 	{
 		return m_pBitMap[CARD_FRONT];
 	}
-	inline void DrawCardEnd()
+	void DrawCardEnd()
 	{
-		m_eCardState = CARD_END;
+		if (m_eCardState == CARD_FRONT)
+			m_eCardState = CARD_REAR;
 	}
 	void Init(IMAGE Index, int x, int y);
 	void InitBackGround(IMAGE Index, int x, int y);

@@ -5,6 +5,9 @@ GameManager::GameManager()
 {
     m_iWinCount = 0;
     m_iMenuSelect = -1;
+    m_index = -1;
+    m_index2 = -1;
+    //iCurtime = clock();
 }
 
 void GameManager::DrawMenu(HWND hWnd, HDC hdc, PAINTSTRUCT ps)
@@ -63,6 +66,9 @@ void GameManager::RandCard()
 
 void GameManager::Update(HWND hWnd, LPARAM lParam)
 {
+    if (-1 != m_index2) return;
+
+    int index = 0;
     POINT Point;
     Point.x = LOWORD(lParam);
     Point.y = HIWORD(lParam);
@@ -72,18 +78,32 @@ void GameManager::Update(HWND hWnd, LPARAM lParam)
     case 1:
         for (auto& c : CardList)
         {
-            if (c.ColliderCheck(Point))
+            if (m_index != index && c.ColliderCheck(Point)) 
             {
                 // Card를 보내지말고 index 를 보내서 인덱스값으로 비교하면될듯
                 // for(int i = 0; ....) 이런식
-                if (IsSameCard(c))
+                //if (clock() - iCurtime >= 1000)
                 {
-                    m_iWinCount++;
+                    if (IsSameCard(index))
+                    {
+                        m_iWinCount++;
+                        m_index = -1;
+                    }
+                    else if (-1 != m_index)
+                    {
+                        iCurtime = 0;
+                        //iCurtime = clock();
+                        m_index2 = index;
+                        //DrawCardRear(index);
+                    }
+                    else
+                    m_index = index;
                 }
-               
+
                 InvalidateRect(hWnd, NULL, true);
                 break;
             }
+            index++;
         }
         break;
     case -1:
@@ -105,6 +125,26 @@ void GameManager::Draw(HWND hWnd, LPARAM lParam, HDC hdc, PAINTSTRUCT ps)
         break;
     case -1:
         GameManager::GetInstance()->DrawMenu(hWnd, hdc, ps);
+    }
+}
+
+void GameManager::DrawCardRear(HWND hWnd)
+{
+    if (-1 < m_index2 && -1 < m_index)
+    {
+        if(10 <= iCurtime)
+        //if (clock() - iCurtime >= 1000)
+        {
+            iCurtime = 0;
+            CardList[m_index2].DrawCardEnd();
+            CardList[m_index].DrawCardEnd();
+
+            m_index = -1;
+            m_index2 = -1;
+            InvalidateRect(hWnd, NULL, true);
+            return;
+        }
+        iCurtime++;
     }
 }
 
