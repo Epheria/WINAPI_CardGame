@@ -6,11 +6,15 @@
 
 #define MAX_CARD 10
 #define MAX_CARDLIST 20
+#define GAME_MENU  -1
+#define GAME_PLAY  1
 
 class GameManager
 {
 private:
+	bool m_bPlayStatus;
 	int m_iWinCount;
+	int m_iLeftTime;
 	Card m_Card;
 	Card m_BackGround;
 	std::vector<Card> CardList;
@@ -19,7 +23,7 @@ private:
 	int m_index, m_index2;
 	int iCurtime;
 	static GameManager* m_hThis;
-	RECT rect = { 100, 100, 400, 300 };
+	RECT rect = { 249, 200, 329, 250 };
 	int m_iMenuSelect;
 public:
 	static GameManager* GetInstance()
@@ -43,6 +47,27 @@ public:
 
 		return false;
 	}
+	inline int GetWinCount()
+	{
+		return m_iWinCount;
+	}
+	inline int GetLeftTime()
+	{
+		return m_iLeftTime;
+	}
+	inline void UpdateLeftTime()
+	{
+		if(m_iLeftTime >= 0)
+			m_iLeftTime--;
+	}
+	inline bool GetPlayStatus()
+	{
+		return m_bPlayStatus;
+	}
+	inline void InitPlayStatus()
+	{
+		m_bPlayStatus = false;
+	}
 	void DrawCardRear(HWND hWnd);
 	void DrawMenu(HWND hWnd, HDC hdc, PAINTSTRUCT ps);
 	void DrawCard(HWND hWnd, HDC hdc);
@@ -50,6 +75,8 @@ public:
 	void Update(HWND hWnd, LPARAM lParam);
 	void Draw(HWND hWnd, LPARAM lParam, HDC hdc, PAINTSTRUCT ps);
 	void RandCard();
+	bool CheckWin();
+	bool GameOver();
 
 };
 

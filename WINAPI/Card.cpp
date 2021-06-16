@@ -37,7 +37,6 @@ void Card::Draw(HDC hdc)
 void Card::DrawBackGround(HDC hdc)
 {
 	m_pBitMap[m_eCardState]->DrawBackGround(hdc, m_ix, m_iy);
-
 }
 bool Card::ColliderCheck(POINT point)
 {
@@ -45,6 +44,9 @@ bool Card::ColliderCheck(POINT point)
 	{
 		if (m_eCardState == CARD_REAR)
 			m_eCardState = CARD_FRONT;
+		else if (m_eCardState == CARD_FRONT)
+			return false;
+
 		return true;
 	}
 	return false;

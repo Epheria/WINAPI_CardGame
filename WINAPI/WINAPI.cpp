@@ -6,13 +6,14 @@
 #include "GameManager.h"
 
 #define MAX_LOADSTRING 100
+#define TIMER_SECOND  1
+#define TIMER_MELEESECOND  2
 
 // 전역 변수:
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 HWND g_hWnd;
 char g_buf[256];
-int itime = 60;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -61,6 +62,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+
         //else
         //{
         //    frameTime = GetTickCount64();       //윈도우가 시작된 후 지금까지 시간. 1/1000초.
@@ -124,7 +126,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     //WS_MINIMIZEBOX :최소화 버튼을 가진다.
     //WS_MAXIMIZEBOX :최대화 버튼을 가진다.
     //WS_THICKFRAME  :크기조절을 가능하게 한다.
-    HWND hWnd = g_hWnd = CreateWindowW(szWindowClass, L"타이틀 이름!!", WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+    HWND hWnd = g_hWnd = CreateWindowW(szWindowClass, L"카드 맞추기 게임", WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
         CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
 
@@ -169,14 +171,25 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - 종료 메시지를 게시하고 반환합니다.
 //
 //
+
+void Destroy(HWND hWnd)
+{
+    KillTimer(hWnd, TIMER_SECOND);
+    KillTimer(hWnd, TIMER_MELEESECOND);
+    delete BitMapManager::GetInstance();
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 { 
+    int iWinCount;
+    char buf[256];
+
     switch (message)
     {
     ////그리기는 게임루프에서 처리.
     case WM_CREATE:
-        SetTimer(hWnd, 1, 1000, NULL);
-        SetTimer(hWnd, 2, 100, NULL);
+        SetTimer(hWnd, TIMER_SECOND, 1000, NULL);
+        SetTimer(hWnd, TIMER_MELEESECOND, 100, NULL);
         GameManager::GetInstance()->CreateCard(hWnd);
         MoveWindow(hWnd, 0, 0, 578, 800, true);
         break;
@@ -184,16 +197,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_TIMER:
         switch (wParam)
         {
-        case 1:
+        case TIMER_SECOND:
         {
-            if (itime == 0)
-                break;
-            sprintf_s(g_buf, "%d 초", itime);
-            itime--;
-            InvalidateRect(hWnd, NULL, true);
+            if (GameManager::GetInstance()->GetPlayStatus() == true)
+            {
+                if (GameManager::GetInstance()->GetLeftTime() == 0)
+                {
+                    GameManager::GetInstance()->InitPlayStatus();
+
+                    if (MessageBox(hWnd, L"!! 제한시간 종료 패배 !!", L"패배 창", MB_OK) == IDOK)
+                    {
+                        Destroy(hWnd);
+                        PostQuitMessage(0);
+                    }
+                }
+
+                sprintf_s(g_buf, "%d 초", GameManager::GetInstance()->GetLeftTime());
+                GameManager::GetInstance()->UpdateLeftTime();
+                InvalidateRect(hWnd, NULL, true);
+            }
             break;
         }
-        case 2:
+        case TIMER_MELEESECOND:
             GameManager::GetInstance()->DrawCardRear(hWnd);
             break;
         }
@@ -203,9 +228,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
 
+        if (GameManager::GetInstance()->CheckWin())
+        {
+            GameManager::GetInstance()->InitPlayStatus();
+            if (MessageBox(hWnd, L"!! 승리 !!", L"승리 창", MB_OK) == IDOK)
+            {
+                Destroy(hWnd);
+                PostQuitMessage(0);
+            }
+        }
         
         GameManager::GetInstance()->Draw(hWnd, lParam, hdc, ps);
-        TextOutA(hdc, 578 * 0.5f, 50, g_buf, 5);
+        if (GameManager::GetInstance()->GetPlayStatus())
+        {
+            TextOutA(hdc, 578 * 0.5f, 50, g_buf, strlen(g_buf));
+
+        iWinCount = GameManager::GetInstance()->GetWinCount();
+        sprintf_s(buf, " 맞춘 카드 : %d", iWinCount);
+        TextOutA(hdc, 578 * 0.5f, 20, buf, strlen(buf));
+        }
+
+
         EndPaint(hWnd, &ps);
         break;
     }
@@ -218,18 +261,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         //esc 키를 누르면 어플리케이션 종료하겠다.
         if (VK_ESCAPE == wParam)
         {
+            Destroy(hWnd);
             PostQuitMessage(0);
         }
     }
     break;
     case WM_DESTROY:
-        KillTimer(hWnd, 1);
-        KillTimer(hWnd, 2);
-        delete BitMapManager::GetInstance();
+        Destroy(hWnd);
         PostQuitMessage(0);
         break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
+
     return 0;
 }

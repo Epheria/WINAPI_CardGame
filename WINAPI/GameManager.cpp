@@ -3,16 +3,19 @@ GameManager* GameManager::m_hThis = NULL;
 
 GameManager::GameManager()
 {
+    m_bPlayStatus = false;
     m_iWinCount = 0;
     m_iMenuSelect = -1;
     m_index = -1;
     m_index2 = -1;
+    m_iLeftTime = 60;
     //iCurtime = clock();
 }
 
 void GameManager::DrawMenu(HWND hWnd, HDC hdc, PAINTSTRUCT ps)
 {
     POINT Point;
+    Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
     DrawTextA(hdc, "게임시작", -1, &rect, DT_CENTER | DT_WORDBREAK);
 }
 
@@ -75,30 +78,26 @@ void GameManager::Update(HWND hWnd, LPARAM lParam)
 
     switch (m_iMenuSelect)
     {
-    case 1:
+    case GAME_PLAY:
         for (auto& c : CardList)
         {
-            if (m_index != index && c.ColliderCheck(Point)) 
+            if (m_index != index && c.ColliderCheck(Point))
             {
                 // Card를 보내지말고 index 를 보내서 인덱스값으로 비교하면될듯
                 // for(int i = 0; ....) 이런식
-                //if (clock() - iCurtime >= 1000)
+                if (IsSameCard(index))
                 {
-                    if (IsSameCard(index))
-                    {
-                        m_iWinCount++;
-                        m_index = -1;
-                    }
-                    else if (-1 != m_index)
-                    {
-                        iCurtime = 0;
-                        //iCurtime = clock();
-                        m_index2 = index;
-                        //DrawCardRear(index);
-                    }
-                    else
-                    m_index = index;
+                    m_iWinCount++;
+                    m_index = -1;
                 }
+                else if (-1 != m_index)
+                {
+                    iCurtime = 0;
+                    m_index2 = index;
+                }
+                else
+                    m_index = index;
+
 
                 InvalidateRect(hWnd, NULL, true);
                 break;
@@ -106,10 +105,11 @@ void GameManager::Update(HWND hWnd, LPARAM lParam)
             index++;
         }
         break;
-    case -1:
+    case GAME_MENU:
         if (PtInRect(&rect, Point))
         {
-            m_iMenuSelect = 1;
+            m_bPlayStatus = true;
+            m_iMenuSelect = GAME_PLAY;
             InvalidateRect(hWnd, NULL, true);
         }
         break;
@@ -120,10 +120,10 @@ void GameManager::Draw(HWND hWnd, LPARAM lParam, HDC hdc, PAINTSTRUCT ps)
 {
     switch (m_iMenuSelect)
     {
-    case 1:
+    case GAME_PLAY:
         GameManager::GetInstance()->DrawCard(hWnd, hdc);
         break;
-    case -1:
+    case GAME_MENU:
         GameManager::GetInstance()->DrawMenu(hWnd, hdc, ps);
     }
 }
@@ -146,6 +146,25 @@ void GameManager::DrawCardRear(HWND hWnd)
         }
         iCurtime++;
     }
+}
+
+bool GameManager::CheckWin()
+{
+    if (m_iWinCount >= 10)
+    {
+
+        return true;
+    }
+    else
+        return false;
+}
+
+bool GameManager::GameOver()
+{
+    if (m_iLeftTime <= 0)
+        return true;
+    else
+        return false;
 }
 
 GameManager::~GameManager()
